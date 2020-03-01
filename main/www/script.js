@@ -282,6 +282,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
   }
 
   dhcp.onchange = () => {
+	updateConfig(dhcp)
       if (dhcp.checked) {
           hide(ip)
           hide(netmask)
