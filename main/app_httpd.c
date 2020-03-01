@@ -159,11 +159,19 @@ static esp_err_t stream_handler(httpd_req_t *req){
 
     isStreaming = true;
 
+	//fps limiter init
+	TickType_t xLastWakeTime;
+	const TickType_t xFrequency = (1000 / 5) / portTICK_PERIOD_MS;	//200ms = 5fps
+    // Initialise the xLastWakeTime variable with the current time.
+    xLastWakeTime = xTaskGetTickCount ();
+
 #ifdef CONFIG_LED_ILLUMINATOR_ENABLED
     app_illuminator_set_led_intensity(led_duty);
 #endif
 
     while(true){
+		//fps limiter
+		 vTaskDelayUntil( &xLastWakeTime, xFrequency );
 
         fb = esp_camera_fb_get();
         if (!fb) {
