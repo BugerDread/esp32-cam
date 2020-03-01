@@ -37,6 +37,14 @@ static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" 
 static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
+static const char* HTTP_AUTH_STRING = "Basic YnVnZXI6d2FubmFTRUU=";	//buger:wannaSEE - echo -n "buger:wannaSEE" | openssl enc -base64
+static const char* HTTP_UNAUTH_RESP = "Unauthorized!";
+static const char* HTTP_AUTH_HDR = "Authorization";
+static const char* HTTP_401 = "401 Authorization Required";
+static const char* HTTP_REQ_AUTH_HDR = "WWW-Authenticate";
+static const char* HTTP_REQ_AUTH_REALM = "Basic realm=\"Secure Area\"";
+
+
 httpd_handle_t stream_httpd = NULL;
 httpd_handle_t camera_httpd = NULL;
 
@@ -150,6 +158,41 @@ static esp_err_t stream_handler(httpd_req_t *req){
         last_frame = esp_timer_get_time();
     }
 
+	//auth
+	char*  auth_buf;
+    size_t auth_buf_len;
+	bool auth_ok = false;
+
+	//check if there is auth header present
+	auth_buf_len = httpd_req_get_hdr_value_len(req, HTTP_AUTH_HDR) + 1;
+    if (auth_buf_len > 1) {
+		//yes, there is auth header
+        auth_buf = malloc(auth_buf_len);
+        /* Copy null terminated value string into buffer - the auth string */
+        if (httpd_req_get_hdr_value_str(req, HTTP_AUTH_HDR, auth_buf, auth_buf_len) == ESP_OK) {
+            ESP_LOGI(TAG, "Found header => Authorization: %s", auth_buf);
+			if (strcmp (auth_buf, HTTP_AUTH_STRING) == 0) {
+				ESP_LOGI(TAG, "Auth OK!");
+				auth_ok = true;
+			}
+        }
+        free(auth_buf);
+    } 
+
+	if (!auth_ok) {
+		//not authorized
+		if(res == ESP_OK) res = httpd_resp_set_status(req, HTTP_401);
+		if(res == ESP_OK) res = httpd_resp_set_hdr(req, HTTP_REQ_AUTH_HDR, HTTP_REQ_AUTH_REALM);
+		if(res == ESP_OK) res = httpd_resp_send(req, HTTP_UNAUTH_RESP, strlen(HTTP_UNAUTH_RESP));
+		if(res == ESP_OK) {
+			ESP_LOGI(TAG, "Auth failed, request sent!");
+		} else {
+			ESP_LOGI(TAG, "Auth failed, request failed!");
+		}
+		return res;
+	}
+
+	//do this when auth OK
     res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
     if(res != ESP_OK){
         return res;
