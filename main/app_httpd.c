@@ -146,6 +146,48 @@ static esp_err_t capture_handler(httpd_req_t *req){
 
 }
 
+static esp_err_t auth_check(httpd_req_t *req) {
+	//returns ESP_OK is auth OK, ESP_FAIL if not
+	char*  auth_buf;
+    size_t auth_buf_len;
+	bool auth_ok = false;
+
+	//check if there is auth header present
+	auth_buf_len = httpd_req_get_hdr_value_len(req, HTTP_AUTH_HDR) + 1; //+1 for null term at the end of the string
+	
+    if (auth_buf_len == (strlen(HTTP_AUTH_STRING) + 1)) {
+		//yes, there is auth header and have same length as our HTTP_AUTH_STRING, lets compare them
+        auth_buf = malloc(auth_buf_len); 
+        /* Copy null terminated value string into buffer - the auth string */
+        if (httpd_req_get_hdr_value_str(req, HTTP_AUTH_HDR, auth_buf, auth_buf_len) == ESP_OK) {
+            ESP_LOGI(TAG, "Found header => Authorization: %s", auth_buf);
+			if (strcmp (auth_buf, HTTP_AUTH_STRING) == 0) {
+				//auth OK!
+				ESP_LOGI(TAG, "Auth OK!");
+				free(auth_buf);
+				return ESP_OK;
+			}
+        }
+        free(auth_buf);
+    } 
+
+	//no header present or bad login
+	return ESP_FAIL;
+}
+
+static esp_err_t auth_req(httpd_req_t *req) {
+	//ruquest the auth if failed
+		esp_err_t res = httpd_resp_set_status(req, HTTP_401);
+		if(res == ESP_OK) res = httpd_resp_set_hdr(req, HTTP_REQ_AUTH_HDR, HTTP_REQ_AUTH_REALM);
+		if(res == ESP_OK) res = httpd_resp_send(req, HTTP_UNAUTH_RESP, strlen(HTTP_UNAUTH_RESP));
+		if(res == ESP_OK) {
+			ESP_LOGI(TAG, "Auth request sent!");
+		} else {
+			ESP_LOGI(TAG, "Auth request failed!");
+		}
+		return res;
+}
+
 static esp_err_t stream_handler(httpd_req_t *req){
     camera_fb_t * fb = NULL;
     esp_err_t res = ESP_OK;
@@ -153,46 +195,19 @@ static esp_err_t stream_handler(httpd_req_t *req){
     uint8_t * _jpg_buf = NULL;
     char * part_buf[64];
 
+	//check auth
+	if (auth_check(req) != ESP_OK) {
+		//not authorized, ask auth and quit
+		res = auth_req(req);
+		return res;
+	}
+
+	//do this when auth OK
     static int64_t last_frame = 0;
     if(!last_frame) {
         last_frame = esp_timer_get_time();
     }
 
-	//auth
-	char*  auth_buf;
-    size_t auth_buf_len;
-	bool auth_ok = false;
-
-	//check if there is auth header present
-	auth_buf_len = httpd_req_get_hdr_value_len(req, HTTP_AUTH_HDR) + 1;
-    if (auth_buf_len > 1) {
-		//yes, there is auth header
-        auth_buf = malloc(auth_buf_len);
-        /* Copy null terminated value string into buffer - the auth string */
-        if (httpd_req_get_hdr_value_str(req, HTTP_AUTH_HDR, auth_buf, auth_buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found header => Authorization: %s", auth_buf);
-			if (strcmp (auth_buf, HTTP_AUTH_STRING) == 0) {
-				ESP_LOGI(TAG, "Auth OK!");
-				auth_ok = true;
-			}
-        }
-        free(auth_buf);
-    } 
-
-	if (!auth_ok) {
-		//not authorized
-		if(res == ESP_OK) res = httpd_resp_set_status(req, HTTP_401);
-		if(res == ESP_OK) res = httpd_resp_set_hdr(req, HTTP_REQ_AUTH_HDR, HTTP_REQ_AUTH_REALM);
-		if(res == ESP_OK) res = httpd_resp_send(req, HTTP_UNAUTH_RESP, strlen(HTTP_UNAUTH_RESP));
-		if(res == ESP_OK) {
-			ESP_LOGI(TAG, "Auth failed, request sent!");
-		} else {
-			ESP_LOGI(TAG, "Auth failed, request failed!");
-		}
-		return res;
-	}
-
-	//do this when auth OK
     res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
     if(res != ESP_OK){
         return res;
