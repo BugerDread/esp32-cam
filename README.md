@@ -1,4 +1,14 @@
-# ESP32-CAM
+# ESP32-CAM FORKED BY BUGER
+
+## Horizontal lines on AI Thinker modules when low light
+
+Remove Q2 and connect U1 & U3 Vin to +5V, phy output power 12dB
+
+## Overheating
+
+Set ESP32 freq to 80MHz, phy output power 12dB
+
+# ORIGINAL README - ESP32-CAM
 
 The goal of this project is to create a functional webcam firmware for ESP32 based camera boards with OV2640 modules using the ESP-IDF framework. Such modules often come with optional components like high power LED "flash", an OLED display, or a motion detector. This project will incorporate compile time support for optional libraries to support these components.
 

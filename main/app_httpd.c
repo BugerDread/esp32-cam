@@ -106,51 +106,10 @@ static size_t jpg_encode_stream(void * arg, size_t index, const void* data, size
     return len;
 }
 
-static esp_err_t capture_handler(httpd_req_t *req){
-    camera_fb_t * fb = NULL;
-    esp_err_t res = ESP_OK;
-    int64_t fr_start = esp_timer_get_time();
-
-#ifdef CONFIG_LED_ILLUMINATOR_ENABLED    
-    app_illuminator_set_led_intensity(led_duty);
-    vTaskDelay(150 / portTICK_PERIOD_MS); // The LED requires ~150ms to "warm up"    
-#endif
-    fb = esp_camera_fb_get();
-#ifdef CONFIG_LED_ILLUMINATOR_ENABLED    
-    app_illuminator_set_led_intensity(0);
-#endif    
-    if (!fb) {
-        ESP_LOGE(TAG, "Camera capture failed");
-        httpd_resp_send_500(req);
-        return ESP_FAIL;
-    }
-
-    httpd_resp_set_type(req, "image/jpeg");
-    httpd_resp_set_hdr(req, "Content-Disposition", "inline; filename=capture.jpg");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-
-    size_t fb_len = 0;
-    if(fb->format == PIXFORMAT_JPEG){
-        fb_len = fb->len;
-        res = httpd_resp_send(req, (const char *)fb->buf, fb->len);
-    } else {
-        jpg_chunking_t jchunk = {req, 0};
-        res = frame2jpg_cb(fb, 80, jpg_encode_stream, &jchunk)?ESP_OK:ESP_FAIL;
-        httpd_resp_send_chunk(req, NULL, 0);
-        fb_len = jchunk.len;
-    }
-    esp_camera_fb_return(fb);
-    int64_t fr_end = esp_timer_get_time();
-    ESP_LOGI(TAG, "JPG: %uB %ums", (uint32_t)(fb_len), (uint32_t)((fr_end - fr_start)/1000));
-    return res;
-
-}
-
 static esp_err_t auth_check(httpd_req_t *req) {
 	//returns ESP_OK is auth OK, ESP_FAIL if not
 	char*  auth_buf;
     size_t auth_buf_len;
-	bool auth_ok = false;
 
 	//check if there is auth header present
 	auth_buf_len = httpd_req_get_hdr_value_len(req, HTTP_AUTH_HDR) + 1; //+1 for null term at the end of the string
@@ -188,6 +147,55 @@ static esp_err_t auth_req(httpd_req_t *req) {
 		return res;
 }
 
+static esp_err_t capture_handler(httpd_req_t *req){
+    camera_fb_t * fb = NULL;
+    esp_err_t res = ESP_OK;
+
+	//check auth
+	if (auth_check(req) != ESP_OK) {
+		//not authorized, ask auth and quit
+		return auth_req(req);
+	}
+
+	//do this when auth OK
+
+    int64_t fr_start = esp_timer_get_time();
+
+#ifdef CONFIG_LED_ILLUMINATOR_ENABLED    
+    app_illuminator_set_led_intensity(led_duty);
+    vTaskDelay(150 / portTICK_PERIOD_MS); // The LED requires ~150ms to "warm up"    
+#endif
+    fb = esp_camera_fb_get();
+#ifdef CONFIG_LED_ILLUMINATOR_ENABLED    
+    app_illuminator_set_led_intensity(0);
+#endif    
+    if (!fb) {
+        ESP_LOGE(TAG, "Camera capture failed");
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    httpd_resp_set_type(req, "image/jpeg");
+    httpd_resp_set_hdr(req, "Content-Disposition", "inline; filename=capture.jpg");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+
+    size_t fb_len = 0;
+    if(fb->format == PIXFORMAT_JPEG){
+        fb_len = fb->len;
+        res = httpd_resp_send(req, (const char *)fb->buf, fb->len);
+    } else {
+        jpg_chunking_t jchunk = {req, 0};
+        res = frame2jpg_cb(fb, 80, jpg_encode_stream, &jchunk)?ESP_OK:ESP_FAIL;
+        httpd_resp_send_chunk(req, NULL, 0);
+        fb_len = jchunk.len;
+    }
+    esp_camera_fb_return(fb);
+    int64_t fr_end = esp_timer_get_time();
+    ESP_LOGI(TAG, "JPG: %uB %ums", (uint32_t)(fb_len), (uint32_t)((fr_end - fr_start)/1000));
+    return res;
+
+}
+
 static esp_err_t stream_handler(httpd_req_t *req){
     camera_fb_t * fb = NULL;
     esp_err_t res = ESP_OK;
@@ -198,8 +206,7 @@ static esp_err_t stream_handler(httpd_req_t *req){
 	//check auth
 	if (auth_check(req) != ESP_OK) {
 		//not authorized, ask auth and quit
-		res = auth_req(req);
-		return res;
+		return auth_req(req);
 	}
 
 	//do this when auth OK
@@ -301,6 +308,15 @@ static esp_err_t cmd_handler(httpd_req_t *req){
     char variable[32] = {0,};
     char value[32] = {0,};
 
+	//check auth
+	if (auth_check(req) != ESP_OK) {
+		//not authorized, ask auth and quit
+		return auth_req(req);
+	}
+
+	//do this when auth OK
+
+
     buf_len = httpd_req_get_url_query_len(req) + 1;
     if (buf_len > 1) {
         buf = (char*)malloc(buf_len);
@@ -390,12 +406,28 @@ static esp_err_t cmd_handler(httpd_req_t *req){
 }
 
 static esp_err_t store_handler(httpd_req_t *req) {
+	//check auth
+	if (auth_check(req) != ESP_OK) {
+		//not authorized, ask auth and quit
+		return auth_req(req);
+	}
+
+	//do this when auth OK
+
     app_settings_save();
     esp_camera_save_to_nvs("camera");    
     return httpd_resp_send(req, NULL, 0);
 }
 
 static esp_err_t reboot_handler(httpd_req_t *req) {
+	//check auth
+	if (auth_check(req) != ESP_OK) {
+		//not authorized, ask auth and quit
+		return auth_req(req);
+	}
+
+	//do this when auth OK
+
     esp_err_t ret = httpd_resp_send(req, NULL, 0);
     vTaskDelay(250 / portTICK_PERIOD_MS); // Short delay to ensure the http response is sent
     esp_restart();
@@ -403,12 +435,28 @@ static esp_err_t reboot_handler(httpd_req_t *req) {
 }
 
 static esp_err_t reset_handler(httpd_req_t *req) {
+	//check auth
+	if (auth_check(req) != ESP_OK) {
+		//not authorized, ask auth and quit
+		return auth_req(req);
+	}
+
+	//do this when auth OK
+
     app_settings_reset();
     esp_camera_load_from_nvs("camera");
     return httpd_resp_send(req, NULL, 0);
 }
 
 static esp_err_t status_handler(httpd_req_t *req){
+	//check auth
+	if (auth_check(req) != ESP_OK) {
+		//not authorized, ask auth and quit
+		return auth_req(req);
+	}
+
+	//do this when auth OK
+
     static char json_response[1024];
 
     sensor_t * s = esp_camera_sensor_get();
@@ -469,6 +517,14 @@ static esp_err_t status_handler(httpd_req_t *req){
 }
 
 static esp_err_t stylesheet_handler(httpd_req_t *req){
+	//check auth
+	if (auth_check(req) != ESP_OK) {
+		//not authorized, ask auth and quit
+		return auth_req(req);
+	}
+
+	//do this when auth OK
+
     extern const unsigned char style_css_gz_start[] asm("_binary_style_css_gz_start");
     extern const unsigned char style_css_gz_end[]   asm("_binary_style_css_gz_end");
     size_t style_css_gz_len = style_css_gz_end - style_css_gz_start;
@@ -479,6 +535,14 @@ static esp_err_t stylesheet_handler(httpd_req_t *req){
 }
 
 static esp_err_t script_handler(httpd_req_t *req){
+	//check auth
+	if (auth_check(req) != ESP_OK) {
+		//not authorized, ask auth and quit
+		return auth_req(req);
+	}
+
+	//do this when auth OK
+
     extern const unsigned char script_js_gz_start[] asm("_binary_script_js_gz_start");
     extern const unsigned char script_js_gz_end[]   asm("_binary_script_js_gz_end");
     size_t script_js_gz_len = script_js_gz_end - script_js_gz_start;
@@ -489,6 +553,14 @@ static esp_err_t script_handler(httpd_req_t *req){
 }
 
 static esp_err_t index_handler(httpd_req_t *req){
+	//check auth
+	if (auth_check(req) != ESP_OK) {
+		//not authorized, ask auth and quit
+		return auth_req(req);
+	}
+
+	//do this when auth OK
+
     extern const unsigned char index_html_gz_start[] asm("_binary_index_html_gz_start");
     extern const unsigned char index_html_gz_end[]   asm("_binary_index_html_gz_end");
     size_t index_html_gz_len = index_html_gz_end - index_html_gz_start;
