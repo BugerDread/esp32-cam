@@ -119,7 +119,7 @@ static esp_err_t auth_check(httpd_req_t *req) {
         auth_buf = malloc(auth_buf_len); 
         /* Copy null terminated value string into buffer - the auth string */
         if (httpd_req_get_hdr_value_str(req, HTTP_AUTH_HDR, auth_buf, auth_buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found header => Authorization: %s", auth_buf);
+            //ESP_LOGI(TAG, "Found header => Authorization: %s", auth_buf);
 			if (strcmp (auth_buf, HTTP_AUTH_STRING) == 0) {
 				//auth OK!
 				ESP_LOGI(TAG, "Auth OK!");
@@ -224,19 +224,27 @@ static esp_err_t stream_handler(httpd_req_t *req){
 
     isStreaming = true;
 
-	//fps limiter init
-	TickType_t xLastWakeTime;
-	const TickType_t xFrequency = (1000 / 5) / portTICK_PERIOD_MS;	//200ms = 5fps
-    // Initialise the xLastWakeTime variable with the current time.
-    xLastWakeTime = xTaskGetTickCount ();
-
 #ifdef CONFIG_LED_ILLUMINATOR_ENABLED
     app_illuminator_set_led_intensity(led_duty);
 #endif
 
+	//fps limiter init
+    TickType_t xFrequency = 1000 / (portTICK_PERIOD_MS * settings.fps);
+	TickType_t xLastWakeTime = xTaskGetTickCount ();;
+	uint8_t prevfps = settings.fps;
+
     while(true){
 		//fps limiter
-		 vTaskDelayUntil( &xLastWakeTime, xFrequency );
+		if (settings.fps != 0) {		//fps = 0 means limiter off
+			if (prevfps != settings.fps) {
+				//fps changed
+				xLastWakeTime = xTaskGetTickCount ();	//reinit to take effect immediately
+				prevfps = settings.fps;
+				xFrequency = 1000 / (portTICK_PERIOD_MS * settings.fps);
+				ESP_LOGI(TAG, "FPS changed");
+			}
+			vTaskDelayUntil( &xLastWakeTime, xFrequency );
+		}
 
         fb = esp_camera_fb_get();
         if (!fb) {
@@ -344,7 +352,7 @@ static esp_err_t cmd_handler(httpd_req_t *req){
     }
 
     int val = atoi(value);
-    ESP_LOGI(TAG, "%s = %d", variable, val);
+    ESP_LOGI(TAG, "%s = %s", variable, value);
     sensor_t * s = esp_camera_sensor_get();
     int res = 0;
 
@@ -393,6 +401,8 @@ static esp_err_t cmd_handler(httpd_req_t *req){
     else if(!strcmp(variable, "gateway")) settings.gateway.addr = ipaddr_addr(value);
     else if(!strcmp(variable, "dns1")) settings.dns1.addr = ipaddr_addr(value);
     else if(!strcmp(variable, "dns2")) settings.dns2.addr = ipaddr_addr(value);
+	else if(!strcmp(variable, "fps")) settings.fps = val;
+	else if(!strcmp(variable, "http_passwd")) strncpy(settings.http_passwd,value,LEN_HTTP_PASSWD);
     else {
       res = -1;
     }
@@ -503,7 +513,8 @@ static esp_err_t status_handler(httpd_req_t *req){
     p+=sprintf(p, "\"netmask\":\"%s\",", ip4addr_ntoa(&settings.netmask));
     p+=sprintf(p, "\"gateway\":\"%s\",", ip4addr_ntoa(&settings.gateway));
     p+=sprintf(p, "\"dns1\":\"%s\",", ip4addr_ntoa(&settings.dns1));
-    p+=sprintf(p, "\"dns2\":\"%s\"", ip4addr_ntoa(&settings.dns2));
+    p+=sprintf(p, "\"dns2\":\"%s\",", ip4addr_ntoa(&settings.dns2));
+	p+=sprintf(p, "\"fps\":%u", settings.fps);
 #ifdef CONFIG_LED_ILLUMINATOR_ENABLED
     p+= sprintf(p, ",\"led_intensity\":%u", led_duty);
 #else

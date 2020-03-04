@@ -30,6 +30,8 @@ static void log_settings() {
   ESP_LOGI(TAG," gateway=%s",ip4addr_ntoa(&settings.gateway));
   ESP_LOGI(TAG," dns1=%s",ip4addr_ntoa(&settings.dns1));
   ESP_LOGI(TAG," dns2=%s",ip4addr_ntoa(&settings.dns2));
+  ESP_LOGI(TAG," fps=%u",settings.fps);
+  ESP_LOGI(TAG," http_password=%s",settings.http_passwd);
 }
 
 void app_settings_reset() {
@@ -53,6 +55,8 @@ void app_settings_reset() {
   strncpy(settings.timezone,CONFIG_TIMEZONE,LEN_TIMEZONE);
   #endif
   settings.dhcp = true;  
+  settings.fps = 5;
+  strncpy(settings.http_passwd,DEF_HTTP_PASSWD,LEN_HTTP_PASSWD);
 }
 
 void app_settings_save() {

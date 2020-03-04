@@ -6,6 +6,8 @@
 #define LEN_WIFI_SSID     32
 #define LEN_WIFI_PASSWORD 64
 #define LEN_HOSTNAME      32
+#define LEN_HTTP_PASSWD   64
+#define DEF_HTTP_PASSWD   "Basic YnVnZXI6d2FubmFTRUU="
 #ifdef CONFIG_MDNS_ENABLED
 #define LEN_MDNS_INSTANCE 32
 #endif
@@ -32,6 +34,8 @@ struct app_settings_t {
   ip4_addr_t gateway;
   ip4_addr_t dns1;
   ip4_addr_t dns2;
+  uint8_t fps;
+  char http_passwd[LEN_HTTP_PASSWD];
 } settings;
 
 void app_settings_save();
