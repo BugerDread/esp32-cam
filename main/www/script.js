@@ -193,12 +193,12 @@ document.addEventListener('DOMContentLoaded', function (event) {
       })
   }
 
-  function makeAuthStr(){
-	//var r = cam_user.value.concat(":")
-	//r = r.concat(cam_passwd.value)
-    http_authstr.value = btoa(cam_user.value.concat(":").concat(cam_password.value))
-    updateConfig(http_authstr)
-  }
+//  function makeAuthStr(){
+//	//var r = cam_user.value.concat(":")
+//	//r = r.concat(cam_passwd.value)
+ //   http_authstr.value = btoa(cam_user.value.concat(":",cam_password.value))
+//    updateConfig(http_authstr)
+//  }
   // Attach actions to buttons
 
   restoreButton.onclick = () => {
@@ -262,13 +262,13 @@ document.addEventListener('DOMContentLoaded', function (event) {
     el.onchange = () => updateConfig(el)
   })
 
-  cam_user.onchange = () => {
-    makeAuthStr()
-  }
+//  cam_user.onchange = () => {
+//    makeAuthStr()
+//  }
 
-  cam_password.onchange = () => {
-    makeAuthStr()
-  }
+//  cam_password.onchange = () => {
+//    makeAuthStr()
+//  }
   
   agc.onchange = () => {
     updateConfig(agc)
