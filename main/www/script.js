@@ -343,6 +343,6 @@ document.addEventListener('DOMContentLoaded', function (event) {
     })
 
   streamWindowLink.href = `${streamUrl}/stream`
-  setTimeout(fetchSettings(), 1000)
-  setTimeout(startStream(), 2000)
+  setTimeout(fetchSettings, 1000)
+  setTimeout(startStream, 2000)
 })

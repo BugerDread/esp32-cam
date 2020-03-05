@@ -262,6 +262,7 @@ static esp_err_t stream_handler(httpd_req_t *req){
             res = ESP_FAIL;
         } else {
                 if(fb->format != PIXFORMAT_JPEG){
+					//should not happend!!!
                     bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
                     esp_camera_fb_return(fb);
                     fb = NULL;
@@ -739,6 +740,13 @@ void app_httpd_startup(){
     if (httpd_start(&stream_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(stream_httpd, &stream_uri);
     }
+	//second streamer :-)
+//    config.server_port += 1;
+ //   config.ctrl_port += 1;
+ //   ESP_LOGI(TAG, "Starting stream server on port: '%d'", config.server_port);
+ //   if (httpd_start(&stream_httpd, &config) == ESP_OK) {
+ //       httpd_register_uri_handler(stream_httpd, &stream_uri);
+ //   }
 }
 
 void app_httpd_shutdown() {
