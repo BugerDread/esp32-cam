@@ -62,9 +62,9 @@ void app_settings_reset() {
   #endif
   settings.dhcp = true;  
   settings.fps = 5;
-  settings.http_auth = true;
-  strncpy(settings.http_user,DEF_HTTP_USER,LEN_HTTP_USER);
-  strncpy(settings.http_password,DEF_HTTP_PASSWORD,LEN_HTTP_PASSWORD);
+  settings.http_auth = CONFIG_DEF_HTTP_AUTH_ENABLED;
+  strncpy(settings.http_user, CONFIG_DEF_HTTP_USER, LEN_HTTP_USER);
+  strncpy(settings.http_password, CONFIG_DEF_HTTP_PASSWORD, LEN_HTTP_PASSWORD);
 }
 
 void app_settings_save() {

@@ -7,15 +7,19 @@
 #define LEN_WIFI_PASSWORD 64
 #define LEN_HOSTNAME      32
 #define LEN_HTTP_USER	  16		//incl string termination /0 => 15 effective
-#define DEF_HTTP_USER     "buger"
 #define LEN_HTTP_PASSWORD 16		//incl string termination /0 => 15 effective
-#define DEF_HTTP_PASSWORD "wannaSEE"
 #ifdef CONFIG_MDNS_ENABLED
 #define LEN_MDNS_INSTANCE 32
 #endif
 #ifdef CONFIG_SNTP_ENABLED
 #define LEN_NTP_SERVER    32
 #define LEN_TIMEZONE      32
+#endif
+
+#ifdef CONFIG_DEF_HTTP_AUTH_ENABLED
+#define CONFIG_DEF_HTTP_AUTH_ENABLED true
+#else
+#define CONFIG_DEF_HTTP_AUTH_ENABLED false
 #endif
 
 struct app_settings_t {

@@ -243,7 +243,7 @@ static esp_err_t stream_handler(httpd_req_t *req){
 	TickType_t xLastWakeTime = xTaskGetTickCount ();;
 	uint8_t prevfps = settings.fps;
 
-    while(true){
+    while(res == ESP_OK){
 		//fps limiter
 		if (settings.fps != 0) {		//fps = 0 means limiter off
 			if (prevfps != settings.fps) {
@@ -262,14 +262,8 @@ static esp_err_t stream_handler(httpd_req_t *req){
             res = ESP_FAIL;
         } else {
                 if(fb->format != PIXFORMAT_JPEG){
-					//should not happend!!!
-                    bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
-                    esp_camera_fb_return(fb);
-                    fb = NULL;
-                    if(!jpeg_converted){
-                        ESP_LOGE(TAG, "JPEG compression failed");
-                        res = ESP_FAIL;
-                    }
+                    ESP_LOGE(TAG, "JPEG compression failed");
+                    res = ESP_FAIL;
                 } else {
                     _jpg_buf_len = fb->len;
                     _jpg_buf = fb->buf;
@@ -289,13 +283,8 @@ static esp_err_t stream_handler(httpd_req_t *req){
             esp_camera_fb_return(fb);
             fb = NULL;
             _jpg_buf = NULL;
-        } else if(_jpg_buf){
-            free(_jpg_buf);
-            _jpg_buf = NULL;
-        }
-        if(res != ESP_OK){
-            break;
-        }
+        } 
+
         int64_t fr_end = esp_timer_get_time();
 
         int64_t frame_time = fr_end - last_frame;
@@ -746,7 +735,7 @@ void app_httpd_startup(){
  //   ESP_LOGI(TAG, "Starting stream server on port: '%d'", config.server_port);
  //   if (httpd_start(&stream_httpd, &config) == ESP_OK) {
  //       httpd_register_uri_handler(stream_httpd, &stream_uri);
- //   }
+  //  }
 }
 
 void app_httpd_shutdown() {
