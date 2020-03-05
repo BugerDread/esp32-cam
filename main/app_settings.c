@@ -10,6 +10,8 @@
 //#include "ssd1306.h"
 #include "app_settings.h"
 
+
+
 static const char* TAG = "settings";
 static const char* NVS_KEY = "settings";
 
@@ -31,7 +33,11 @@ static void log_settings() {
   ESP_LOGI(TAG," dns1=%s",ip4addr_ntoa(&settings.dns1));
   ESP_LOGI(TAG," dns2=%s",ip4addr_ntoa(&settings.dns2));
   ESP_LOGI(TAG," fps=%u",settings.fps);
-  ESP_LOGI(TAG," http_password=%s",settings.http_passwd);
+  ESP_LOGI(TAG," auth=%u",settings.http_auth);
+  ESP_LOGI(TAG," http_user=%s",settings.http_user);
+  ESP_LOGI(TAG," http_password=%s",settings.http_password);
+
+
 }
 
 void app_settings_reset() {
@@ -56,7 +62,9 @@ void app_settings_reset() {
   #endif
   settings.dhcp = true;  
   settings.fps = 5;
-  strncpy(settings.http_passwd,DEF_HTTP_PASSWD,LEN_HTTP_PASSWD);
+  settings.http_auth = true;
+  strncpy(settings.http_user,DEF_HTTP_USER,LEN_HTTP_USER);
+  strncpy(settings.http_password,DEF_HTTP_PASSWORD,LEN_HTTP_PASSWORD);
 }
 
 void app_settings_save() {

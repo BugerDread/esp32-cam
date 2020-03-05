@@ -6,8 +6,10 @@
 #define LEN_WIFI_SSID     32
 #define LEN_WIFI_PASSWORD 64
 #define LEN_HOSTNAME      32
-#define LEN_HTTP_PASSWD   64
-#define DEF_HTTP_PASSWD   "Basic YnVnZXI6d2FubmFTRUU="
+#define LEN_HTTP_USER	  16		//incl string termination /0 => 15 effective
+#define DEF_HTTP_USER     "buger"
+#define LEN_HTTP_PASSWORD 16		//incl string termination /0 => 15 effective
+#define DEF_HTTP_PASSWORD "wannaSEE"
 #ifdef CONFIG_MDNS_ENABLED
 #define LEN_MDNS_INSTANCE 32
 #endif
@@ -35,7 +37,9 @@ struct app_settings_t {
   ip4_addr_t dns1;
   ip4_addr_t dns2;
   uint8_t fps;
-  char http_passwd[LEN_HTTP_PASSWD];
+  bool http_auth;
+  char http_user[LEN_HTTP_USER + 1];
+  char http_password[LEN_HTTP_PASSWORD + 1];
 } settings;
 
 void app_settings_save();

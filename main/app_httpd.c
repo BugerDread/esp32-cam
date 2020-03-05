@@ -1,4 +1,5 @@
 #include "app_httpd.h"
+#include "mbedtls/base64.h"
 #include "esp_http_server.h"
 #include "esp_timer.h"
 #include "esp_camera.h"
@@ -37,7 +38,8 @@ static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" 
 static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
-static const char* HTTP_AUTH_STRING = "Basic YnVnZXI6d2FubmFTRUU=";	//buger:wannaSEE - echo -n "buger:wannaSEE" | openssl enc -base64
+// static const char* HTTP_AUTH_STRING = "Basic YnVnZXI6d2FubmFTRUU=";	//buger:wannaSEE - echo -n "buger:wannaSEE" | openssl enc -base64
+static const char* HTTP_AUTH_STRING_PREFIX = "Basic ";
 static const char* HTTP_UNAUTH_RESP = "Unauthorized!";
 static const char* HTTP_AUTH_HDR = "Authorization";
 static const char* HTTP_401 = "401 Authorization Required";
@@ -55,6 +57,8 @@ static int led_duty = 0;
 #endif
 
 bool isStreaming = false;
+char * http_auth_b64 = NULL;
+
 
 typedef struct {
         size_t size;  //number of values used for filtering
@@ -111,16 +115,22 @@ static esp_err_t auth_check(httpd_req_t *req) {
 	char*  auth_buf;
     size_t auth_buf_len;
 
+	//check if auth is on
+	if (http_auth_b64 == NULL) {
+		//auth is off => auth_check passed :-)
+		return ESP_OK;
+	}
+
 	//check if there is auth header present
 	auth_buf_len = httpd_req_get_hdr_value_len(req, HTTP_AUTH_HDR) + 1; //+1 for null term at the end of the string
 	
-    if (auth_buf_len == (strlen(HTTP_AUTH_STRING) + 1)) {
+    if (auth_buf_len == (strlen(http_auth_b64) + 1)) {
 		//yes, there is auth header and have same length as our HTTP_AUTH_STRING, lets compare them
         auth_buf = malloc(auth_buf_len); 
         /* Copy null terminated value string into buffer - the auth string */
         if (httpd_req_get_hdr_value_str(req, HTTP_AUTH_HDR, auth_buf, auth_buf_len) == ESP_OK) {
             //ESP_LOGI(TAG, "Found header => Authorization: %s", auth_buf);
-			if (strcmp (auth_buf, HTTP_AUTH_STRING) == 0) {
+			if (strcmp (auth_buf, http_auth_b64) == 0) {
 				//auth OK!
 				ESP_LOGI(TAG, "Auth OK!");
 				free(auth_buf);
@@ -402,7 +412,9 @@ static esp_err_t cmd_handler(httpd_req_t *req){
     else if(!strcmp(variable, "dns1")) settings.dns1.addr = ipaddr_addr(value);
     else if(!strcmp(variable, "dns2")) settings.dns2.addr = ipaddr_addr(value);
 	else if(!strcmp(variable, "fps")) settings.fps = val;
-	else if(!strcmp(variable, "http_passwd")) strncpy(settings.http_passwd,value,LEN_HTTP_PASSWD);
+    else if(!strcmp(variable, "http_user")) strncpy(settings.http_user,value,LEN_HTTP_USER);
+	else if(!strcmp(variable, "http_password")) strncpy(settings.http_password,value,LEN_HTTP_PASSWORD);
+	else if(!strcmp(variable, "http_auth")) settings.http_auth = val;
     else {
       res = -1;
     }
@@ -514,7 +526,10 @@ static esp_err_t status_handler(httpd_req_t *req){
     p+=sprintf(p, "\"gateway\":\"%s\",", ip4addr_ntoa(&settings.gateway));
     p+=sprintf(p, "\"dns1\":\"%s\",", ip4addr_ntoa(&settings.dns1));
     p+=sprintf(p, "\"dns2\":\"%s\",", ip4addr_ntoa(&settings.dns2));
-	p+=sprintf(p, "\"fps\":%u", settings.fps);
+	p+=sprintf(p, "\"fps\":%u,", settings.fps);
+	p+=sprintf(p, "\"http_auth\":%u,", settings.http_auth);
+	p+=sprintf(p, "\"http_user\":\"%s\",", settings.http_user);
+	p+=sprintf(p, "\"http_password\":\"%s\"", settings.http_password);
 #ifdef CONFIG_LED_ILLUMINATOR_ENABLED
     p+= sprintf(p, ",\"led_intensity\":%u", led_duty);
 #else
@@ -585,6 +600,54 @@ void app_httpd_startup(){
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
     config.max_uri_handlers = 10;
+
+	if (settings.http_auth) {
+		//auth turned on
+		char buf[LEN_HTTP_USER + LEN_HTTP_PASSWORD + 2] = {0};
+		strncpy(buf, settings.http_user, LEN_HTTP_USER);
+		strcat(buf, ":");
+		strncat(buf, settings.http_password, LEN_HTTP_PASSWORD);
+
+		ESP_LOGI(TAG, " creds=%s", buf);
+
+		#define BASE64_SIZE_T_MAX   ( (size_t) -1 ) /* SIZE_T_MAX is not standard */
+
+		size_t b64_len = 0;
+		int err = 0;
+		//check how big buffer we need for base64 encoded username:password
+		mbedtls_base64_encode( NULL, 0, &b64_len, (unsigned char*) buf, strlen(buf));
+		if (b64_len != BASE64_SIZE_T_MAX) {
+			//yes ve know the length
+			ESP_LOGI(TAG, " ok, we need %u bytes to encode creds", b64_len);
+			char* b64_buf;
+			b64_buf = malloc(b64_len);
+			err = mbedtls_base64_encode((unsigned char*)b64_buf, b64_len, &b64_len, (unsigned char*) buf, strlen(buf));
+			if (err == 0) {
+				//conversion to base64 OK
+				//now add the prefix
+				http_auth_b64 = malloc(b64_len + strlen(HTTP_AUTH_STRING_PREFIX));
+				strncpy(http_auth_b64, HTTP_AUTH_STRING_PREFIX, b64_len + strlen(HTTP_AUTH_STRING_PREFIX));
+				strncat(http_auth_b64, b64_buf, b64_len);
+				ESP_LOGI(TAG, " http_auth_b64=%s", http_auth_b64);
+			} else {
+				//conversion to base64 failed
+				ESP_LOGI(TAG, " b64 encoder err - conversion failed");
+				if (err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL) {
+					ESP_LOGI(TAG, " b64 encoder err - buffer too small");
+				} else if (err == MBEDTLS_ERR_BASE64_INVALID_CHARACTER) {
+					ESP_LOGI(TAG, " b64 encoder err - invalid character");
+				} else {
+					ESP_LOGI(TAG, " b64 encoder err - unknown");
+				}
+			}
+			free(b64_buf);
+		} else {
+			ESP_LOGI(TAG, " b64 encoder err - cant get buffer length");
+		}
+	} else {
+		//auth is off
+		http_auth_b64 = NULL;
+	}
 
     httpd_uri_t index_uri = {
         .uri       = "/",

@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
   var baseHost = document.location.origin
   var streamUrl = baseHost + ':81'
 
+
+
   const framesize = document.getElementById('framesize')
   const ledGroup = document.getElementById('led-group')
   const awb = document.getElementById('awb_gain')
@@ -29,6 +31,11 @@ document.addEventListener('DOMContentLoaded', function (event) {
   const view = document.getElementById('stream')
   const viewContainer = document.getElementById('stream-container')
   const streamWindowLink = document.getElementById('stream-window-link')
+  const http_auth = document.getElementById('http_auth')
+  const http_password = document.getElementById('http_password-group')
+  const http_user = document.getElementById('http_user-group')
+
+
 
   function hide(el) {
     el.classList.add('hidden')
@@ -55,7 +62,9 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
   function startStream() {
     console.log("Starting Stream")
-    view.src = `${streamUrl}/stream`
+	surlAuth = streamUrl		
+// .replace("://", "://" + "buger" + ":" + "wannaSEE" + "@");
+    view.src = `${surlAuth}/stream`
     show(view)
     show(viewContainer)
     streamButton.innerHTML = 'Stop Stream'
@@ -161,7 +170,15 @@ document.addEventListener('DOMContentLoaded', function (event) {
           show(dns1)
           show(dns2)
         }
-      }  
+      } else if(el.id == "http_auth"){
+		if (value) {
+			  show(http_user)
+			  show(http_password)
+		} else {
+			  hide(http_user)
+			  hide(http_password)
+		}
+	  } 
     }
   }
 
@@ -309,6 +326,17 @@ document.addEventListener('DOMContentLoaded', function (event) {
           show(gateway)
           show(dns1)
           show(dns2)
+      }
+  }
+
+  http_auth.onchange = () => {
+	updateConfig(http_auth)
+      if (http_auth.checked) {
+		  show(http_user)
+		  show(http_password)
+      } else {
+		  hide(http_user)
+		  hide(http_password)
       }
   }
 
