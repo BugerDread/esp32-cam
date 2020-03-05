@@ -2,8 +2,6 @@ document.addEventListener('DOMContentLoaded', function (event) {
   var baseHost = document.location.origin
   var streamUrl = baseHost + ':81'
 
-
-
   const framesize = document.getElementById('framesize')
   const ledGroup = document.getElementById('led-group')
   const awb = document.getElementById('awb_gain')
@@ -35,8 +33,6 @@ document.addEventListener('DOMContentLoaded', function (event) {
   const http_password = document.getElementById('http_password-group')
   const http_user = document.getElementById('http_user-group')
 
-
-
   function hide(el) {
     el.classList.add('hidden')
   }
@@ -61,10 +57,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
   }
 
   function startStream() {
-    console.log("Starting Stream")
-	surlAuth = streamUrl		
-// .replace("://", "://" + "buger" + ":" + "wannaSEE" + "@");
-    view.src = `${surlAuth}/stream`
+    console.log("Starting Stream")	
+    view.src = `${streamUrl}/stream`
     show(view)
     show(viewContainer)
     streamButton.innerHTML = 'Stop Stream'
@@ -349,6 +343,6 @@ document.addEventListener('DOMContentLoaded', function (event) {
     })
 
   streamWindowLink.href = `${streamUrl}/stream`
-  fetchSettings()
-  startStream()
+  setTimeout(fetchSettings(), 1000)
+  setTimeout(startStream(), 2000)
 })

@@ -67,7 +67,7 @@ void app_camera_startup() {
   config.pixel_format = PIXFORMAT_JPEG;
   config.frame_size   = FRAMESIZE_UXGA;	//temporary set highest resolution
   config.jpeg_quality = 10;				//and best quality, because esp_camera_init calculates fb size from these values = to have big buffers allocated
-  config.fb_count     = 2;
+  config.fb_count     = 3;
 
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
