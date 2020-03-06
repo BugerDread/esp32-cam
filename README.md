@@ -11,6 +11,7 @@ Set ESP32 CPU freq to 80MHz and phy output power to 12dB in menuconfig to preven
 ## Fixed / added features
 
 * added basic http authentication
+* added fps limiter (default 5fps)
 * fixed resolution switching
 * fixed enable/disable dhcp
 * "Reboot Camera" button delay refresh of the page (5 secponds), this gives ESP some time to reboot - otherwise the page cant refresh
