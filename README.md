@@ -2,11 +2,39 @@
 
 ## Horizontal lines on AI Thinker modules when low light
 
-Remove Q2 and connect U1 & U3 Vin to +5V, phy output power 12dB
+Remove Q2 and connect U1 & U3 Vin to +5V, phy output power 12dB - not completely verifired
 
 ## Overheating
 
-Set ESP32 freq to 80MHz, phy output power 12dB
+Set ESP32 CPU freq to 80MHz and phy output power to 12dB in menuconfig to prevent overheating.
+
+## Fixed / added features
+
+* added basic http authentication
+* fixed resolution switching
+* fixed enable/disable dhcp
+* "Reboot Camera" button delay refresh of the page (5 secponds), this gives ESP some time to reboot - otherwise the page cant refresh
+* disabled stream autorstart after page load, also removed (commented out) the stream button as it seems that browsers refuse to send auth / ask auth for element on different port. If somebody knows how to fix this feel free to fork :-)
+
+### Basic HTTP authentication
+
+This feature when enabled require the user to log-in using username and password. 
+
+This feature is ENABLED by default, default credentials:
+* User: buger
+* Password: wannaSEE
+
+You can set your own default user/password in menuconfig (Camera Web Server - Authentication) or modify the user/password using web UI - Network Settings (please note that you need to click "Save Settings" and then "Reboot Camera" to apply Network Settings)
+
+## Notes
+
+* Im using esp32-cam connected to [motion](https://motion-project.github.io/)
+* this firmware (and all others I know) are able to stream to ONLY ONE CLIENT AT A TIME, because of limited resources of ESP32
+* therefore whole streamig functionality in the camera UI itself is useless for me and thats why I disabled the streaming in the web UI
+* it is still possible to open the stream via link in new window when no other client is connected
+* even other stream client is connected it is still posible to capture still image and modify the configuration
+* it seems that changing resolution when motion is connected to stream crashes the motion (not verified)
+* HAVE FUN but respect privacy of others
 
 # ORIGINAL README - ESP32-CAM
 

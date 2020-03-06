@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
   const rebootButton = document.getElementById('reboot-camera')
   const storeButton = document.getElementById('store-settings')
   const refreshButton = document.getElementById('refresh-settings')
-  const streamButton = document.getElementById('toggle-stream')
+//  const streamButton = document.getElementById('toggle-stream')
   const stillButton = document.getElementById('get-still')
   const view = document.getElementById('stream')
   const viewContainer = document.getElementById('stream-container')
@@ -51,17 +51,21 @@ document.addEventListener('DOMContentLoaded', function (event) {
     el.disabled = false
   }
 
-  function stopStream() {
-    window.stop();
-    streamButton.innerHTML = 'Start Stream'
-  }
+//  function stopStream() {
+//    window.stop();
+//    streamButton.innerHTML = 'Start Stream'
+//  }
 
-  function startStream() {
-    console.log("Starting Stream")	
-    view.src = `${streamUrl}/stream`
-    show(view)
-    show(viewContainer)
-    streamButton.innerHTML = 'Stop Stream'
+//  function startStream() {
+//    console.log("Starting Stream")	
+//    view.src = `${streamUrl}/stream`
+//    show(view)
+//    show(viewContainer)
+//    streamButton.innerHTML = 'Stop Stream'
+//  }
+
+  function refreshme() {
+	 window.location.reload(true);
   }
 
   function rebootCamera() {
@@ -70,8 +74,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
       .then(response => {
          console.log(`request to ${query} finished, status: ${response.status}`)
          if (response.status == 200) 
-            //Reload the page and ignore the browser cache.
-            window.location.reload(true);
+            //Reload the page and ignore the browser cache after 5seconds
+            setTimeout(refreshme, 5000)
       })    
   }
 
@@ -108,6 +112,16 @@ document.addEventListener('DOMContentLoaded', function (event) {
           hide(ntpServer)
           hide(timezone)
         }
+		
+
+		var linkurl = `${streamUrl}/stream`
+		if (state.http_auth == 1) {
+			//add username and password when auth enabled
+	  		linkurl = linkurl.replace("://", "://" + state.http_user + ":" + state.http_password + "@")
+		}
+ 		streamWindowLink.href = linkurl
+
+
       })
   }
 
@@ -213,8 +227,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
   // Attach actions to buttons
 
   restoreButton.onclick = () => {
-    if (confirm("Are you sure you want to restore default settings?")) {
-      stopStream()
+    if (confirm("Are you sure you want to restore default settings?\r\nPlease reboot camera to apply \"Network Settings\".")) {
+    //  stopStream()
       hide(viewContainer)
       resetDefaults()
       //rebootCamera()
@@ -223,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
   rebootButton.onclick = () => {
     if (confirm("Are you sure you want to reboot the camera?")) {
-      stopStream()
+     // stopStream()
       hide(viewContainer)
       rebootCamera()
     }
@@ -238,33 +252,33 @@ document.addEventListener('DOMContentLoaded', function (event) {
   }
 
   stillButton.onclick = () => {
-    stopStream()
+    //stopStream()
     view.src = `${baseHost}/capture?_cb=${Date.now()}`
     show(viewContainer)
   }
 
-  streamButton.onclick = () => {
-    const streamEnabled = streamButton.innerHTML === 'Stop Stream'
-    if (streamEnabled) {
-      stopStream()
-    } else {
-      startStream()
-    }
-  }
+//  streamButton.onclick = () => {
+//    const streamEnabled = streamButton.innerHTML === 'Stop Stream'
+//    if (streamEnabled) {
+//      stopStream()
+//    } else {
+//      startStream()
+//    }
+//  }
 
-  streamWindowLink.onclick = () => {
-    const streamEnabled = streamButton.innerHTML === 'Stop Stream'
-    if (streamEnabled) {
-      stopStream()
-    }
-  }
+//  streamWindowLink.onclick = () => {
+//    const streamEnabled = streamButton.innerHTML === 'Stop Stream'
+//    if (streamEnabled) {
+//      stopStream()
+//    }
+//  }
 
-  streamButton.onerror = () => {
-    window.stop()
-    streamButton.innerHTML = 'Start Stream'
-    hide(view)
-    hide(viewContainer)
-  }
+//  streamButton.onerror = () => {
+//    window.stop()
+//    streamButton.innerHTML = 'Start Stream'
+//    hide(view)
+//    hide(viewContainer)
+//  }
   
   // Attach default on change action
   document
@@ -342,7 +356,9 @@ document.addEventListener('DOMContentLoaded', function (event) {
       }
     })
 
-  streamWindowLink.href = `${streamUrl}/stream`
-  setTimeout(fetchSettings, 1000)
-  setTimeout(startStream, 2000)
+  fetchSettings()
+  
+//${streamUrl}
+  
+ // setTimeout(startStream, 2000)
 })
