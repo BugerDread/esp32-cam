@@ -222,9 +222,13 @@ static esp_err_t capture_handler(httpd_req_t *req){
 static esp_err_t stream_handler(httpd_req_t *req){
     camera_fb_t * fb = NULL;
     esp_err_t res = ESP_OK;
-    size_t _jpg_buf_len = 0;
-    uint8_t * _jpg_buf = NULL;
+    //size_t _jpg_buf_len = 0;
+    //uint8_t * _jpg_buf = NULL;
     char * part_buf[64];
+    int64_t fr_end;
+    int64_t frame_time;
+    uint32_t avg_frame_time;
+    size_t hlen;
 
     //check auth
 //	if (auth_check(req) != ESP_OK) {
@@ -256,11 +260,11 @@ static esp_err_t stream_handler(httpd_req_t *req){
     TickType_t xFrequency = 1000 / (portTICK_PERIOD_MS);    //initialize with 1fps
 	TickType_t xLastWakeTime = 0;   // = xTaskGetTickCount ();;
 	uint8_t prevfps = 0;   // settings.fps;
+	
+	int64_t lastinfo = 0;
 
-    while(true){
+    while(res == ESP_OK){
 
-        fb = esp_camera_fb_get();       //get frame
-        
         //fps limiter
 		if (settings.fps != 0) {		//fps = 0 means limiter off
 			if (prevfps != settings.fps) {
@@ -272,57 +276,43 @@ static esp_err_t stream_handler(httpd_req_t *req){
 			}
 			vTaskDelayUntil( &xLastWakeTime, xFrequency );      //actually wait
 		}     
+		
+        fb = esp_camera_fb_get();       //get frame
         
         if (!fb) {
             ESP_LOGE(TAG, "Camera capture failed");
-            res = ESP_FAIL;
+            //return ESP_FAIL;
         } else {
-                if(fb->format != PIXFORMAT_JPEG){
-                    bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
-                    esp_camera_fb_return(fb);
-                    fb = NULL;
-                    if(!jpeg_converted){
-                        ESP_LOGE(TAG, "JPEG compression failed");
-                        res = ESP_FAIL;
-                    }
-                } else {
-                    _jpg_buf_len = fb->len;
-                    _jpg_buf = fb->buf;
-                }
-        }
-        if(res == ESP_OK){
-            size_t hlen = snprintf((char *)part_buf, 64, _STREAM_PART, _jpg_buf_len);
-            res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
-        }
-        if(res == ESP_OK){
-            res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
-        }
-        if(res == ESP_OK){
-            res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
-        }
-        if(fb){
-            esp_camera_fb_return(fb);
-            fb = NULL;
-            _jpg_buf = NULL;
-        } else if(_jpg_buf){
-            free(_jpg_buf);
-            _jpg_buf = NULL;
-        }
-        if(res != ESP_OK){
-            break;
-        }
-        int64_t fr_end = esp_timer_get_time();
 
-        int64_t frame_time = fr_end - last_frame;
-        last_frame = fr_end;
-        frame_time /= 1000;
-        uint32_t avg_frame_time = ra_filter_run(&ra_filter, frame_time);
-        avg_fps = 1000.0 / avg_frame_time;
-        ESP_LOGI(TAG, "MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)"
-            ,(uint32_t)(_jpg_buf_len),
-            (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time,
-            avg_frame_time, avg_fps
-        );
+            hlen = snprintf((char *)part_buf, 64, _STREAM_PART, fb->len);
+            res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
+            if(res == ESP_OK){
+                res = httpd_resp_send_chunk(req, (const char *)fb->buf, fb->len);
+            }
+            if(res == ESP_OK){
+                res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
+            }
+            
+            fr_end = esp_timer_get_time();
+
+            frame_time = fr_end - last_frame;
+            last_frame = fr_end;
+            frame_time /= 1000;
+            avg_frame_time = ra_filter_run(&ra_filter, frame_time);
+            
+            if ((fr_end - lastinfo) > 1000000) {
+                //show info every second
+                lastinfo = fr_end;
+                avg_fps = 1000.0 / avg_frame_time;
+                ESP_LOGI(TAG, "MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)"
+                    ,(uint32_t)(fb->len),
+                    (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time,
+                    avg_frame_time, avg_fps
+                );
+            } 
+            esp_camera_fb_return(fb);
+           //fb = NULL;
+        }
     }
 
     avg_fps = 0;
