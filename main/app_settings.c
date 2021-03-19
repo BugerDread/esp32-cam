@@ -17,8 +17,6 @@
 #include "app_settings.h"
 #include "scut.h"
 
-
-
 static const char* TAG = "settings";
 static const char* NVS_KEY = "settings";
 
@@ -33,7 +31,6 @@ static void log_settings() {
   ESP_LOGI(TAG, " ntp_server=%s",settings.ntp_server);
   ESP_LOGI(TAG, " timezone=%s",settings.timezone);
   #endif
-<<<<<<< HEAD
   ESP_LOGI(TAG, " dhcp=%u", settings.dhcp);
   ESP_LOGI(TAG, " ip="      IPSTR, IP2STR(&settings.ip));
   ESP_LOGI(TAG, " netmask=" IPSTR, IP2STR(&settings.netmask));
@@ -44,20 +41,6 @@ static void log_settings() {
   ESP_LOGI(TAG, " auth=%u", settings.http_auth);
   ESP_LOGI(TAG, " http_user=%s", settings.http_user);
   ESP_LOGI(TAG, " http_password=%s", settings.http_password);
-=======
-  ESP_LOGI(TAG," dhcp=%u",settings.dhcp);
-  ESP_LOGI(TAG," ip=%s",ip4addr_ntoa(&settings.ip));
-  ESP_LOGI(TAG," netmask=%s",ip4addr_ntoa(&settings.netmask));
-  ESP_LOGI(TAG," gateway=%s",ip4addr_ntoa(&settings.gateway));
-  ESP_LOGI(TAG," dns1=%s",ip4addr_ntoa(&settings.dns1));
-  ESP_LOGI(TAG," dns2=%s",ip4addr_ntoa(&settings.dns2));
-  ESP_LOGI(TAG," fps=%u",settings.fps);
-  ESP_LOGI(TAG," auth=%u",settings.http_auth);
-  ESP_LOGI(TAG," http_user=%s",settings.http_user);
-  ESP_LOGI(TAG," http_password=%s",settings.http_password);
-
-
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 }
 
 void app_settings_reset() {
@@ -89,14 +72,6 @@ void app_settings_reset() {
   #else
   settings.http_auth = false;
   #endif
-<<<<<<< HEAD
-=======
-  settings.dhcp = true;  
-  settings.fps = 5;
-  settings.http_auth = CONFIG_DEF_HTTP_AUTH_ENABLED;
-  strncpy(settings.http_user, CONFIG_DEF_HTTP_USER, LEN_HTTP_USER);
-  strncpy(settings.http_password, CONFIG_DEF_HTTP_PASSWORD, LEN_HTTP_PASSWORD);
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 }
 
 void app_settings_save() {

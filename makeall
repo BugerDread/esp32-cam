@@ -1,2 +1,0 @@
-cd main/www/ && ./compress_pages.sh && cd ../.. && make -j4
-

@@ -40,12 +40,8 @@ static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" 
 static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
-<<<<<<< HEAD
 // static const char* HTTP_AUTH_STRING = "Basic YnVnZXI6d2FubmFTRUU=";	
 //buger:wannaSEE - echo -n "buger:wannaSEE" | openssl enc -base64
-=======
-// static const char* HTTP_AUTH_STRING = "Basic YnVnZXI6d2FubmFTRUU=";	//buger:wannaSEE - echo -n "buger:wannaSEE" | openssl enc -base64
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 static const char* HTTP_AUTH_STRING_PREFIX = "Basic ";
 static const char* HTTP_UNAUTH_RESP = "Unauthorized!";
 static const char* HTTP_AUTH_HDR = "Authorization";
@@ -53,10 +49,6 @@ static const char* HTTP_401 = "401 Authorization Required";
 static const char* HTTP_REQ_AUTH_HDR = "WWW-Authenticate";
 static const char* HTTP_REQ_AUTH_REALM = "Basic realm=\"Secure Area\"";
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 httpd_handle_t stream_httpd = NULL;
 httpd_handle_t camera_httpd = NULL;
 
@@ -68,10 +60,6 @@ static int led_duty = 0;
 
 bool isStreaming = false;
 char * http_auth_b64 = NULL;
-<<<<<<< HEAD
-=======
-
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 
 typedef struct {
         size_t size;  //number of values used for filtering
@@ -123,7 +111,6 @@ static size_t jpg_encode_stream(void * arg, size_t index, const void* data, size
     return len;
 }
 
-<<<<<<< HEAD
 //static esp_err_t send_crossorigin_hdr (httpd_req_t *req) {
 //    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 //    httpd_resp_set_hdr(req, "Access-Control-Max-Age", "600");
@@ -133,8 +120,6 @@ static size_t jpg_encode_stream(void * arg, size_t index, const void* data, size
 //}
 
 
-=======
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 static esp_err_t auth_check(httpd_req_t *req) {
 	//returns ESP_OK is auth OK, ESP_FAIL if not
 	char*  auth_buf;
@@ -148,11 +133,7 @@ static esp_err_t auth_check(httpd_req_t *req) {
 
 	//check if there is auth header present
 	auth_buf_len = httpd_req_get_hdr_value_len(req, HTTP_AUTH_HDR) + 1; //+1 for null term at the end of the string
-<<<<<<< HEAD
 
-=======
-	
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     if (auth_buf_len == (strlen(http_auth_b64) + 1)) {
 		//yes, there is auth header and have same length as our HTTP_AUTH_STRING, lets compare them
         auth_buf = malloc(auth_buf_len); 
@@ -175,15 +156,10 @@ static esp_err_t auth_check(httpd_req_t *req) {
 
 static esp_err_t auth_req(httpd_req_t *req) {
 	//ruquest the auth if failed
-<<<<<<< HEAD
 	    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 		esp_err_t res = httpd_resp_set_status(req, HTTP_401);
 		if(res == ESP_OK) res = httpd_resp_set_hdr(req, HTTP_REQ_AUTH_HDR, HTTP_REQ_AUTH_REALM);
 		//send_crossorigin_hdr (req); //temporary
-=======
-		esp_err_t res = httpd_resp_set_status(req, HTTP_401);
-		if(res == ESP_OK) res = httpd_resp_set_hdr(req, HTTP_REQ_AUTH_HDR, HTTP_REQ_AUTH_REALM);
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 		if(res == ESP_OK) res = httpd_resp_send(req, HTTP_UNAUTH_RESP, strlen(HTTP_UNAUTH_RESP));
 		if(res == ESP_OK) {
 			ESP_LOGI(TAG, "Auth request sent!");
@@ -196,24 +172,15 @@ static esp_err_t auth_req(httpd_req_t *req) {
 static esp_err_t capture_handler(httpd_req_t *req){
     camera_fb_t * fb = NULL;
     esp_err_t res = ESP_OK;
-<<<<<<< HEAD
     
     //check auth
-=======
-
-	//check auth
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 	if (auth_check(req) != ESP_OK) {
 		//not authorized, ask auth and quit
 		return auth_req(req);
 	}
 
 	//do this when auth OK
-<<<<<<< HEAD
     
-=======
-
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     int64_t fr_start = esp_timer_get_time();
     
 
@@ -259,7 +226,6 @@ static esp_err_t stream_handler(httpd_req_t *req){
     uint8_t * _jpg_buf = NULL;
     char * part_buf[64];
 
-<<<<<<< HEAD
     //check auth
 //	if (auth_check(req) != ESP_OK) {
 //		//not authorized, ask auth and quit
@@ -267,15 +233,6 @@ static esp_err_t stream_handler(httpd_req_t *req){
 //	}
 	//do this when auth OK
 
-=======
-	//check auth
-	if (auth_check(req) != ESP_OK) {
-		//not authorized, ask auth and quit
-		return auth_req(req);
-	}
-
-	//do this when auth OK
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     static int64_t last_frame = 0;
     if(!last_frame) {
         last_frame = esp_timer_get_time();
@@ -295,32 +252,12 @@ static esp_err_t stream_handler(httpd_req_t *req){
     app_illuminator_set_led_intensity(led_duty);
 #endif
 
-<<<<<<< HEAD
     //fps limiter init
     TickType_t xFrequency = 1000 / (portTICK_PERIOD_MS);    //initialize with 1fps
 	TickType_t xLastWakeTime = 0;   // = xTaskGetTickCount ();;
 	uint8_t prevfps = 0;   // settings.fps;
 
     while(true){
-=======
-	//fps limiter init
-    TickType_t xFrequency = 1000 / (portTICK_PERIOD_MS * settings.fps);
-	TickType_t xLastWakeTime = xTaskGetTickCount ();;
-	uint8_t prevfps = settings.fps;
-
-    while(res == ESP_OK){
-		//fps limiter
-		if (settings.fps != 0) {		//fps = 0 means limiter off
-			if (prevfps != settings.fps) {
-				//fps changed
-				xLastWakeTime = xTaskGetTickCount ();	//reinit to take effect immediately
-				prevfps = settings.fps;
-				xFrequency = 1000 / (portTICK_PERIOD_MS * settings.fps);
-				ESP_LOGI(TAG, "FPS changed");
-			}
-			vTaskDelayUntil( &xLastWakeTime, xFrequency );
-		}
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 
         fb = esp_camera_fb_get();       //get frame
         
@@ -341,8 +278,13 @@ static esp_err_t stream_handler(httpd_req_t *req){
             res = ESP_FAIL;
         } else {
                 if(fb->format != PIXFORMAT_JPEG){
-                    ESP_LOGE(TAG, "JPEG compression failed");
-                    res = ESP_FAIL;
+                    bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
+                    esp_camera_fb_return(fb);
+                    fb = NULL;
+                    if(!jpeg_converted){
+                        ESP_LOGE(TAG, "JPEG compression failed");
+                        res = ESP_FAIL;
+                    }
                 } else {
                     _jpg_buf_len = fb->len;
                     _jpg_buf = fb->buf;
@@ -362,8 +304,13 @@ static esp_err_t stream_handler(httpd_req_t *req){
             esp_camera_fb_return(fb);
             fb = NULL;
             _jpg_buf = NULL;
-        } 
-
+        } else if(_jpg_buf){
+            free(_jpg_buf);
+            _jpg_buf = NULL;
+        }
+        if(res != ESP_OK){
+            break;
+        }
         int64_t fr_end = esp_timer_get_time();
 
         int64_t frame_time = fr_end - last_frame;
@@ -437,15 +384,6 @@ static esp_err_t cmd_handler(httpd_req_t *req){
 
 	//do this when auth OK
 
-	//check auth
-	if (auth_check(req) != ESP_OK) {
-		//not authorized, ask auth and quit
-		return auth_req(req);
-	}
-
-	//do this when auth OK
-
-
     buf_len = httpd_req_get_url_query_len(req) + 1;
     if (buf_len > 1) {
         buf = (char*)malloc(buf_len);
@@ -475,11 +413,7 @@ static esp_err_t cmd_handler(httpd_req_t *req){
     urldecode2 (value, value);  //we need to decode (%20 to space etc) https://www.w3schools.com/jsref/jsref_encodeuricomponent.asp 
 
     int val = atoi(value);
-<<<<<<< HEAD
     ESP_LOGI(TAG, "%s = %s (%d)", variable, value, val);
-=======
-    ESP_LOGI(TAG, "%s = %s", variable, value);
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     sensor_t * s = esp_camera_sensor_get();
     int res = 0;
 
@@ -529,15 +463,9 @@ static esp_err_t cmd_handler(httpd_req_t *req){
     else if(!strcmp(variable, "gateway")) settings.gateway.addr = ipaddr_addr(value);
     else if(!strcmp(variable, "dns1")) settings.dns1.addr = ipaddr_addr(value);
     else if(!strcmp(variable, "dns2")) settings.dns2.addr = ipaddr_addr(value);
-<<<<<<< HEAD
     else if(!strcmp(variable, "fps")) settings.fps = val;
     else if(!strcmp(variable, "http_user")) scut(settings.http_user, value, sizeof(settings.http_user));
 	else if(!strcmp(variable, "http_password")) scut(settings.http_password, value, sizeof(settings.http_user));
-=======
-	else if(!strcmp(variable, "fps")) settings.fps = val;
-    else if(!strcmp(variable, "http_user")) strncpy(settings.http_user,value,LEN_HTTP_USER);
-	else if(!strcmp(variable, "http_password")) strncpy(settings.http_password,value,LEN_HTTP_PASSWORD);
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 	else if(!strcmp(variable, "http_auth")) settings.http_auth = val;
     else {
       res = -1;
@@ -552,42 +480,26 @@ static esp_err_t cmd_handler(httpd_req_t *req){
 }
 
 static esp_err_t store_handler(httpd_req_t *req) {
-<<<<<<< HEAD
     //check auth
-=======
-	//check auth
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 	if (auth_check(req) != ESP_OK) {
 		//not authorized, ask auth and quit
 		return auth_req(req);
 	}
 
 	//do this when auth OK
-<<<<<<< HEAD
-=======
-
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     app_settings_save();
     esp_camera_save_to_nvs("camera");
     return httpd_resp_send(req, NULL, 0);
 }
 
 static esp_err_t reboot_handler(httpd_req_t *req) {
-<<<<<<< HEAD
     //check auth
-=======
-	//check auth
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 	if (auth_check(req) != ESP_OK) {
 		//not authorized, ask auth and quit
 		return auth_req(req);
 	}
 
 	//do this when auth OK
-<<<<<<< HEAD
-=======
-
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     esp_err_t ret = httpd_resp_send(req, NULL, 0);
     vTaskDelay(250 / portTICK_PERIOD_MS); // Short delay to ensure the http response is sent
     esp_restart();
@@ -595,21 +507,13 @@ static esp_err_t reboot_handler(httpd_req_t *req) {
 }
 
 static esp_err_t reset_handler(httpd_req_t *req) {
-<<<<<<< HEAD
     //check auth
-=======
-	//check auth
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 	if (auth_check(req) != ESP_OK) {
 		//not authorized, ask auth and quit
 		return auth_req(req);
 	}
 
 	//do this when auth OK
-<<<<<<< HEAD
-=======
-
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     app_settings_reset();
     esp_camera_load_from_nvs("camera");
     return httpd_resp_send(req, NULL, 0);
@@ -623,11 +527,7 @@ static esp_err_t status_handler(httpd_req_t *req){
 	}
 
 	//do this when auth OK
-<<<<<<< HEAD
 	
-=======
-
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     static char json_response[1024];
 
     sensor_t * s = esp_camera_sensor_get();
@@ -670,7 +570,6 @@ static esp_err_t status_handler(httpd_req_t *req){
     p+=sprintf(p, "\"timezone\":\"%s\",", settings.timezone);
     #endif
     p+=sprintf(p, "\"dhcp\":%u,", settings.dhcp);
-<<<<<<< HEAD
     p+=sprintf(p, "\"ip\":\"" IPSTR "\",", IP2STR(&settings.ip));
     p+=sprintf(p, "\"netmask\":\"" IPSTR "\",", IP2STR(&settings.netmask));
     p+=sprintf(p, "\"gateway\":\"" IPSTR "\",", IP2STR(&settings.gateway));
@@ -678,15 +577,6 @@ static esp_err_t status_handler(httpd_req_t *req){
     p+=sprintf(p, "\"dns2\":\"" IPSTR "\",", IP2STR(&settings.dns2));
     p+=sprintf(p, "\"fps\":%u,", settings.fps);
     p+=sprintf(p, "\"http_auth\":%u,", settings.http_auth);
-=======
-    p+=sprintf(p, "\"ip\":\"%s\",", ip4addr_ntoa(&settings.ip));
-    p+=sprintf(p, "\"netmask\":\"%s\",", ip4addr_ntoa(&settings.netmask));
-    p+=sprintf(p, "\"gateway\":\"%s\",", ip4addr_ntoa(&settings.gateway));
-    p+=sprintf(p, "\"dns1\":\"%s\",", ip4addr_ntoa(&settings.dns1));
-    p+=sprintf(p, "\"dns2\":\"%s\",", ip4addr_ntoa(&settings.dns2));
-	p+=sprintf(p, "\"fps\":%u,", settings.fps);
-	p+=sprintf(p, "\"http_auth\":%u,", settings.http_auth);
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 	p+=sprintf(p, "\"http_user\":\"%s\",", settings.http_user);
 	p+=sprintf(p, "\"http_password\":\"%s\"", settings.http_password);
 #ifdef CONFIG_LED_ILLUMINATOR_ENABLED
@@ -703,11 +593,7 @@ static esp_err_t status_handler(httpd_req_t *req){
 }
 
 static esp_err_t stylesheet_handler(httpd_req_t *req){
-<<<<<<< HEAD
     //check auth
-=======
-	//check auth
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 	if (auth_check(req) != ESP_OK) {
 		//not authorized, ask auth and quit
 		return auth_req(req);
@@ -725,21 +611,13 @@ static esp_err_t stylesheet_handler(httpd_req_t *req){
 }
 
 static esp_err_t script_handler(httpd_req_t *req){
-<<<<<<< HEAD
     //check auth
-=======
-	//check auth
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 	if (auth_check(req) != ESP_OK) {
 		//not authorized, ask auth and quit
 		return auth_req(req);
 	}
 
 	//do this when auth OK
-<<<<<<< HEAD
-=======
-
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     extern const unsigned char script_js_gz_start[] asm("_binary_script_js_gz_start");
     extern const unsigned char script_js_gz_end[]   asm("_binary_script_js_gz_end");
     size_t script_js_gz_len = script_js_gz_end - script_js_gz_start;
@@ -750,21 +628,13 @@ static esp_err_t script_handler(httpd_req_t *req){
 }
 
 static esp_err_t index_handler(httpd_req_t *req){
-<<<<<<< HEAD
     //check auth
-=======
-	//check auth
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 	if (auth_check(req) != ESP_OK) {
 		//not authorized, ask auth and quit
 		return auth_req(req);
 	}
 
 	//do this when auth OK
-<<<<<<< HEAD
-=======
-
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     extern const unsigned char index_html_gz_start[] asm("_binary_index_html_gz_start");
     extern const unsigned char index_html_gz_end[]   asm("_binary_index_html_gz_end");
     size_t index_html_gz_len = index_html_gz_end - index_html_gz_start;
@@ -797,54 +667,6 @@ void app_httpd_startup(){
 		mbedtls_base64_encode( NULL, 0, &b64_len, (unsigned char*) buf, strlen(buf));
 		if (b64_len != BASE64_SIZE_T_MAX) {
 			//yes we know the length
-			ESP_LOGI(TAG, " ok, we need %u bytes to encode creds", b64_len);
-			char* b64_buf;
-			b64_buf = malloc(b64_len);
-			err = mbedtls_base64_encode((unsigned char*)b64_buf, b64_len, &b64_len, (unsigned char*) buf, strlen(buf));
-			if (err == 0) {
-				//conversion to base64 OK
-				//now add the prefix
-				http_auth_b64 = malloc(b64_len + strlen(HTTP_AUTH_STRING_PREFIX));
-				strncpy(http_auth_b64, HTTP_AUTH_STRING_PREFIX, b64_len + strlen(HTTP_AUTH_STRING_PREFIX));
-				strncat(http_auth_b64, b64_buf, b64_len);
-				ESP_LOGI(TAG, " http_auth_b64=%s", http_auth_b64);
-			} else {
-				//conversion to base64 failed
-				ESP_LOGI(TAG, " b64 encoder err - conversion failed");
-				if (err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL) {
-					ESP_LOGI(TAG, " b64 encoder err - buffer too small");
-				} else if (err == MBEDTLS_ERR_BASE64_INVALID_CHARACTER) {
-					ESP_LOGI(TAG, " b64 encoder err - invalid character");
-				} else {
-					ESP_LOGI(TAG, " b64 encoder err - unknown");
-				}
-			}
-			free(b64_buf);
-		} else {
-			ESP_LOGI(TAG, " b64 encoder err - cant get buffer length");
-		}
-	} else {
-		//auth is off
-		http_auth_b64 = NULL;
-	}
-
-	if (settings.http_auth) {
-		//auth turned on
-		char buf[LEN_HTTP_USER + LEN_HTTP_PASSWORD + 2] = {0};
-		strncpy(buf, settings.http_user, LEN_HTTP_USER);
-		strcat(buf, ":");
-		strncat(buf, settings.http_password, LEN_HTTP_PASSWORD);
-
-		ESP_LOGI(TAG, " creds=%s", buf);
-
-		#define BASE64_SIZE_T_MAX   ( (size_t) -1 ) /* SIZE_T_MAX is not standard */
-
-		size_t b64_len = 0;
-		int err = 0;
-		//check how big buffer we need for base64 encoded username:password
-		mbedtls_base64_encode( NULL, 0, &b64_len, (unsigned char*) buf, strlen(buf));
-		if (b64_len != BASE64_SIZE_T_MAX) {
-			//yes ve know the length
 			ESP_LOGI(TAG, " ok, we need %u bytes to encode creds", b64_len);
 			char* b64_buf;
 			b64_buf = malloc(b64_len);
@@ -972,21 +794,8 @@ void app_httpd_startup(){
     config.server_port += 1;
     config.ctrl_port += 1;
     ESP_LOGI(TAG, "Starting stream server on port: '%d'", config.server_port);
-<<<<<<< HEAD
     ESP_ERROR_CHECK(httpd_start(&stream_httpd, &config));
     ESP_ERROR_CHECK(httpd_register_uri_handler(stream_httpd, &stream_uri));
-=======
-    if (httpd_start(&stream_httpd, &config) == ESP_OK) {
-        httpd_register_uri_handler(stream_httpd, &stream_uri);
-    }
-	//second streamer :-)
-//    config.server_port += 1;
- //   config.ctrl_port += 1;
- //   ESP_LOGI(TAG, "Starting stream server on port: '%d'", config.server_port);
- //   if (httpd_start(&stream_httpd, &config) == ESP_OK) {
- //       httpd_register_uri_handler(stream_httpd, &stream_uri);
-  //  }
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 }
 
 void app_httpd_shutdown() {

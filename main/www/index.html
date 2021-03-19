@@ -13,15 +13,9 @@
                 <h2 id="page-title">ESP32 Camera</h2>
                 <nav id="maintoolbar">  
                     <button id="get-still">Capture Still Image</button>
-<<<<<<< HEAD
                     <button id="toggle-stream">Start Stream</button>
                 </nav>
             </section>
-=======
-                  <!--   <button id="toggle-stream">Start Stream</button>  -->                
-                </section>
-            </section>    
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
             <section id="content">
                 <section id="sidebar">
                     
@@ -34,7 +28,6 @@
                         <div class="input-group" id="framesize-group">
                             <label for="framesize">Resolution</label>
                             <select id="framesize" class="default-action">  
-<<<<<<< HEAD
                                 <option value="13">UXGA(1600x1200)</option>
                                 <option value="12">SXGA(1280x1024)</option>
                                 <option value="11">HD(1280x720)</option>
@@ -49,31 +42,14 @@
                                 <option value="2">QCIF(176x144)</option>
                                 <option value="1">QQVGA(160x120)</option>
                                 <option value="0">96x96(96x96)</option>
-=======
-                                <option value="12">UXGA(1600x1200)</option>
-                                <option value="11">SXGA(1280x1024)</option>
-                                <option value="10">XGA(1024x768)</option>
-                                <option value="9" selected="selected">SVGA(800x600)</option>
-                                <option value="8">VGA(640x480)</option>
-                                <option value="7">CIF(400x296)</option>
-                                <option value="6">QVGA(320x240)</option>
-                                <option value="4">HQVGA(240x176)</option>
-                                <option value="1">QQVGA(160x120)</option>
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
                             </select>
                         </div>
                         <div class="input-group" id="fps-group">
                             <label for="fps">Framerate</label>
-<<<<<<< HEAD
                             <output name="fps_out" id="fps_out" for="fps">0</output>
                             <div class="range-min">0</div>
                             <input type="range" id="fps" min="0" max="30" value="0" oninput="fps_out.value=fps.value" class="default-action">
                             <div class="range-max">30</div>
-=======
-                            <div class="range-min">1</div>
-                            <input type="range" id="fps" min="1" max="10" value="5" class="default-action">
-                            <div class="range-max">10</div>
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
                         </div>
                         <div class="input-group" id="quality-group">
                             <label for="quality">Quality</label>
@@ -154,7 +130,6 @@
                         </div>
                         <div class="input-group" id="wifi-password-group">
                             <label for="wifi_password">WiFi Password</label>
-<<<<<<< HEAD
                             <input type="password" id="wifi_password" maxlength="63" class="default-action">
                         </div>
                         <div class="input-group" id="http_auth-group">
@@ -171,24 +146,6 @@
                         <div class="input-group" id="http_password-group">
                             <label for="http_password">Password</label>
                             <input type="password" id="http_password" maxlength="15" class="default-action">
-=======
-                            <input type="password" id="wifi_password" maxsize="64" class="default-action">
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
-                        </div>
- 						<div class="input-group" id="http_auth-group">
-                            <label for="http_auth">Authentication</label>
-                            <div class="switch">
-                                <input id="http_auth" type="checkbox" class="default-action">
-                                <label class="slider" for="http_auth"></label>
-                            </div>
-                        </div>
-                        <div class="input-group" id="http_user-group">
-                            <label for="http_user">Username</label>
-                            <input type="text" id="http_user" maxlength="15" maxsize="16" class="default-action">
-                        </div>
-                        <div class="input-group" id="http_password-group">
-                            <label for="http_password">Password</label>
-                            <input type="password" id="http_password" maxlength="15" maxsize="16" class="default-action">
                         </div>
                         <div class="input-group" id="mdns-instance-group">
                             <label for="mdns_instance">mDNS Instance Name</label>
@@ -337,7 +294,7 @@
                 </section> <!-- sidebar -->
                 <figure>
                     <div id="stream-container" class="image-container hidden">
-                        <img id="stream" src="" >
+                        <img id="stream" src="" crossorigin>
                     </div>
                     <a href="#" id="stream-window-link" target="_blank">Open Stream in New Window</a>
                 </figure>

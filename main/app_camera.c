@@ -13,8 +13,8 @@ static const char *TAG = "Camera";
 void app_camera_reset_defaults() {
   sensor_t *s = esp_camera_sensor_get();
   if (s != NULL) {
-    s->set_framesize(s,FRAMESIZE_SVGA);
-    s->set_quality(s,20);
+    s->set_framesize(s,FRAMESIZE_CIF);
+    s->set_quality(s,14);
     s->set_brightness(s,0);
     s->set_contrast(s,0);
     s->set_saturation(s,0);
@@ -65,16 +65,10 @@ void app_camera_startup() {
   config.pin_reset    = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
-<<<<<<< HEAD
   config.frame_size   = FRAMESIZE_UXGA;     //temporary set highest resolution
   config.jpeg_quality = 10;                 //and best quality
   config.fb_count     = 2;                  //2 buffers, because esp_camera_init calculates fb size from these values
   // check if ^^ will work wo PSRAM - I dont think so
-=======
-  config.frame_size   = FRAMESIZE_UXGA;	//temporary set highest resolution
-  config.jpeg_quality = 10;				//and best quality, because esp_camera_init calculates fb size from these values = to have big buffers allocated
-  config.fb_count     = 2;
->>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
