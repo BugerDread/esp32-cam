@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 document.addEventListener('DOMContentLoaded', function(event) {
     var baseHost = document.location.origin
     var streamUrlbase = baseHost + ':81/stream'
@@ -178,6 +179,114 @@ document.addEventListener('DOMContentLoaded', function(event) {
             initialValue = el.value
             // Prevent undefined or null stringified values
             el.value = (value === undefined || value === null) ? '' : value
+=======
+document.addEventListener('DOMContentLoaded', function (event) {
+  var baseHost = document.location.origin
+  var streamUrl = baseHost + ':81'
+
+  const framesize = document.getElementById('framesize')
+  const ledGroup = document.getElementById('led-group')
+  const awb = document.getElementById('awb_gain')
+  const wb = document.getElementById('wb_mode-group')
+  const agc = document.getElementById('agc')
+  const agcGain = document.getElementById('agc_gain-group')
+  const gainCeiling = document.getElementById('gainceiling-group')
+  const aec = document.getElementById('aec')
+  const exposure = document.getElementById('aec_value-group')
+  const mdns_instance = document.getElementById('mdns-instance-group')
+  const ntpServer = document.getElementById('ntp_server-group')
+  const timezone = document.getElementById('timezone-group')
+  const dhcp = document.getElementById('dhcp')
+  const ip = document.getElementById('ip-group')
+  const netmask = document.getElementById('netmask-group')
+  const gateway = document.getElementById('gateway-group')
+  const dns1 = document.getElementById('dns1-group')
+  const dns2 = document.getElementById('dns2-group')
+  const restoreButton = document.getElementById('restore-defaults')
+  const rebootButton = document.getElementById('reboot-camera')
+  const storeButton = document.getElementById('store-settings')
+  const refreshButton = document.getElementById('refresh-settings')
+//  const streamButton = document.getElementById('toggle-stream')
+  const stillButton = document.getElementById('get-still')
+  const view = document.getElementById('stream')
+  const viewContainer = document.getElementById('stream-container')
+  const streamWindowLink = document.getElementById('stream-window-link')
+  const http_auth = document.getElementById('http_auth')
+  const http_password = document.getElementById('http_password-group')
+  const http_user = document.getElementById('http_user-group')
+
+  function hide(el) {
+    el.classList.add('hidden')
+  }
+  
+  function show(el) {
+    el.classList.remove('hidden')
+  }
+
+  function disable(el) {
+    el.classList.add('disabled')
+    el.disabled = true
+  }
+
+  function enable(el) {
+    el.classList.remove('disabled')
+    el.disabled = false
+  }
+
+//  function stopStream() {
+//    window.stop();
+//    streamButton.innerHTML = 'Start Stream'
+//  }
+
+//  function startStream() {
+//    console.log("Starting Stream")	
+//    view.src = `${streamUrl}/stream`
+//    show(view)
+//    show(viewContainer)
+//    streamButton.innerHTML = 'Stop Stream'
+//  }
+
+  function refreshme() {
+	 window.location.reload(true);
+  }
+
+  function rebootCamera() {
+    const query = `${baseHost}/reboot`
+    fetch(query)
+      .then(response => {
+         console.log(`request to ${query} finished, status: ${response.status}`)
+         if (response.status == 200) 
+            //Reload the page and ignore the browser cache after 5seconds
+            setTimeout(refreshme, 5000)
+      })    
+  }
+
+  function storeSettings() {
+    const query = `${baseHost}/store`
+    fetch(query)
+      .then(response => {
+         console.log(`request to ${query} finished, status: ${response.status}`)
+         if (response.status != 200) 
+           alert("Failed to store camera settings. Is the camera connected?")
+      })
+  }
+
+  function fetchSettings() {
+    fetch(`${baseHost}/status`)
+      .then(function (response) {
+        return response.json()
+      })
+      .then(function (state) {
+        document
+          .querySelectorAll('.default-action')
+          .forEach(el => {
+            updateValue(el, state[el.id], false)
+          })
+        document.title = state.hostname
+        var pageTitle = document.getElementById("page-title")
+        if (pageTitle) {
+          pageTitle.innerHTML = state.hostname
+>>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
         }
 
         if (updateRemote && initialValue !== value) {
@@ -260,6 +369,42 @@ document.addEventListener('DOMContentLoaded', function(event) {
             resetDefaults()
                 //rebootCamera()
         }
+<<<<<<< HEAD
+=======
+		
+
+		var linkurl = `${streamUrl}/stream`
+		if (state.http_auth == 1) {
+			//add username and password when auth enabled
+	  		linkurl = linkurl.replace("://", "://" + state.http_user + ":" + state.http_password + "@")
+		}
+ 		streamWindowLink.href = linkurl
+
+
+      })
+  }
+
+  function resetDefaults() {
+    const query = `${baseHost}/reset`
+    fetch(query)
+      .then(response => {
+         console.log(`request to ${query} finished, status: ${response.status}`)
+         if (response.status != 200) 
+           alert("Failed to reset the camera to firmware defaults. Is the camera connected?")
+      })
+  }
+
+  function updateValue(el, value, updateRemote) {
+    updateRemote = updateRemote == null ? true : updateRemote
+    let initialValue
+    if (el.type === 'checkbox') {
+      initialValue = el.checked
+      value = !!value
+      el.checked = value
+    } else {
+      initialValue = el.value
+      el.value = value
+>>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     }
 
     rebootButton.onclick = () => {
@@ -291,6 +436,18 @@ document.addEventListener('DOMContentLoaded', function(event) {
         } else {
             startStream()
         }
+<<<<<<< HEAD
+=======
+      } else if(el.id == "http_auth"){
+		if (value) {
+			  show(http_user)
+			  show(http_password)
+		} else {
+			  hide(http_user)
+			  hide(http_password)
+		}
+	  } 
+>>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     }
 
     streamWindowLink.onclick = () => {
@@ -314,6 +471,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
             el.onchange = () => updateConfig(el)
         })
 
+<<<<<<< HEAD
     agc.onchange = () => {
         updateConfig(agc)
         if (agc.checked) {
@@ -328,8 +486,25 @@ document.addEventListener('DOMContentLoaded', function(event) {
     aec.onchange = () => {
         updateConfig(aec)
         aec.checked ? hide(exposure) : show(exposure)
+=======
+//  function makeAuthStr(){
+//	//var r = cam_user.value.concat(":")
+//	//r = r.concat(cam_passwd.value)
+ //   http_authstr.value = btoa(cam_user.value.concat(":",cam_password.value))
+//    updateConfig(http_authstr)
+//  }
+  // Attach actions to buttons
+
+  restoreButton.onclick = () => {
+    if (confirm("Are you sure you want to restore default settings?\r\nPlease reboot camera to apply \"Network Settings\".")) {
+    //  stopStream()
+      hide(viewContainer)
+      resetDefaults()
+      //rebootCamera()
+>>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
     }
 
+<<<<<<< HEAD
     awb.onchange = () => {
         updateConfig(awb)
         awb.checked ? show(wb) : hide(wb)
@@ -379,4 +554,132 @@ document.addEventListener('DOMContentLoaded', function(event) {
     streamWindowLink.href = `${streamUrlbase}`
     fetchSettings()
     setTimeout(() => { startStream() ; }, 2000)
+=======
+  rebootButton.onclick = () => {
+    if (confirm("Are you sure you want to reboot the camera?")) {
+     // stopStream()
+      hide(viewContainer)
+      rebootCamera()
+    }
+  }
+
+  storeButton.onclick = () => {
+    storeSettings();
+  }
+
+  refreshButton.onclick = () => {
+    fetchSettings();
+  }
+
+  stillButton.onclick = () => {
+    //stopStream()
+    view.src = `${baseHost}/capture?_cb=${Date.now()}`
+    show(viewContainer)
+  }
+
+//  streamButton.onclick = () => {
+//    const streamEnabled = streamButton.innerHTML === 'Stop Stream'
+//    if (streamEnabled) {
+//      stopStream()
+//    } else {
+//      startStream()
+//    }
+//  }
+
+//  streamWindowLink.onclick = () => {
+//    const streamEnabled = streamButton.innerHTML === 'Stop Stream'
+//    if (streamEnabled) {
+//      stopStream()
+//    }
+//  }
+
+//  streamButton.onerror = () => {
+//    window.stop()
+//    streamButton.innerHTML = 'Start Stream'
+//    hide(view)
+//    hide(viewContainer)
+//  }
+  
+  // Attach default on change action
+  document
+  .querySelectorAll('.default-action')
+  .forEach(el => {
+    el.onchange = () => updateConfig(el)
+  })
+
+//  cam_user.onchange = () => {
+//    makeAuthStr()
+//  }
+
+//  cam_password.onchange = () => {
+//    makeAuthStr()
+//  }
+  
+  agc.onchange = () => {
+    updateConfig(agc)
+    if (agc.checked) {
+      show(gainCeiling)
+      hide(agcGain)
+    } else {
+      hide(gainCeiling)
+      show(agcGain)
+    }
+  }
+
+  aec.onchange = () => {
+    updateConfig(aec)
+    aec.checked ? hide(exposure) : show(exposure)
+  }
+
+  awb.onchange = () => {
+    updateConfig(awb)
+    awb.checked ? show(wb) : hide(wb)
+  }
+  
+  framesize.onchange = () => {
+    updateConfig(framesize)
+  }
+
+  dhcp.onchange = () => {
+	updateConfig(dhcp)
+      if (dhcp.checked) {
+          hide(ip)
+          hide(netmask)
+          hide(gateway)
+          hide(dns1)
+          hide(dns2)
+      } else {
+          show(ip)
+          show(netmask)
+          show(gateway)
+          show(dns1)
+          show(dns2)
+      }
+  }
+
+  http_auth.onchange = () => {
+	updateConfig(http_auth)
+      if (http_auth.checked) {
+		  show(http_user)
+		  show(http_password)
+      } else {
+		  hide(http_user)
+		  hide(http_password)
+      }
+  }
+
+  document
+    .querySelectorAll('.close')
+    .forEach(el => {
+      el.onclick = () => {
+        hide(el.parentNode)
+      }
+    })
+
+  fetchSettings()
+  
+//${streamUrl}
+  
+ // setTimeout(startStream, 2000)
+>>>>>>> 3db4a7ed873711ce49d4631463eecbc978dc902e
 })
