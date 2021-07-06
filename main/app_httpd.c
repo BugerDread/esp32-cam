@@ -26,6 +26,7 @@
 #endif
 
 static const char* TAG = "camera_httpd";
+static const uint8_t MAX_FAILED_FRAMES = 3;    //number of frames failed to capture from camera before give up the stream
 
 float avg_fps = 0;
 
@@ -262,8 +263,10 @@ static esp_err_t stream_handler(httpd_req_t *req){
 	uint8_t prevfps = 0;   // settings.fps;
 	
 	int64_t lastinfo = 0;
+	
+	uint8_t failedframes = 0;   //counter for failed frame captures, just try to make it more stable
 
-    while(res == ESP_OK){
+    while (res == ESP_OK) {
 
         //fps limiter
 		if (settings.fps != 0) {		//fps = 0 means limiter off
@@ -280,10 +283,16 @@ static esp_err_t stream_handler(httpd_req_t *req){
         fb = esp_camera_fb_get();       //get frame
         
         if (!fb) {
-            ESP_LOGE(TAG, "Camera capture failed");
-            //return ESP_FAIL;
+            //frame capture failed
+            failedframes++;
+            ESP_LOGE(TAG, "Camera capture failed %d times", failedframes);
+            if (failedframes >= MAX_FAILED_FRAMES) {                                               //stop the stream if there are 10 failed frames in row
+                ESP_LOGE(TAG, "Too many capture failures, stopping stream, sorry :(");
+                res = ESP_FAIL;     //will cause exit from the while loop
+            }
         } else {
-
+            //frame capture OK
+            failedframes = 0;
             hlen = snprintf((char *)part_buf, 64, _STREAM_PART, fb->len);
             res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
             if(res == ESP_OK){
@@ -300,7 +309,7 @@ static esp_err_t stream_handler(httpd_req_t *req){
             frame_time /= 1000;
             avg_frame_time = ra_filter_run(&ra_filter, frame_time);
             
-            if ((fr_end - lastinfo) > 1000000) {
+            if ((fr_end - lastinfo) >= 1000000) {
                 //show info every second
                 lastinfo = fr_end;
                 avg_fps = 1000.0 / avg_frame_time;
@@ -311,7 +320,6 @@ static esp_err_t stream_handler(httpd_req_t *req){
                 );
             } 
             esp_camera_fb_return(fb);
-           //fb = NULL;
         }
     }
 
